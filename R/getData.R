@@ -75,6 +75,7 @@ lines( tail( index(dat), 20), tail( dat$AnnualisedVolatility, 20 ), col='blue' )
 
 # rolling forecast
 library(parallel)
+
 cl = makePSOCKcluster(10)
 spec = ugarchspec( mean.model=list( armaOrder=c(2,0) ), variance.model = list(model = "eGARCH"), distribution.model = "jsu" )
 roll = ugarchroll( spec, r, n.start = 1000, refit.every = 1000, refit.window = "moving",
