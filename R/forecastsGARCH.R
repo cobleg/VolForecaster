@@ -39,10 +39,11 @@ plot(d.realisedVol, type = 'l', lwd = 1)
 library(rugarch)
 
 # find the best fitting ARFIMA model for returns
-ARFIMA.fit = autoarfima(data = r, ar.max = 2, ma.max = 2, criterion = "AIC", method = "full")
+ARFIMA.fit = autoarfima(data = r, ar.max = 4, ma.max = 4, criterion = "AIC", method = "full")
 show(head(ARFIMA.fit$rank.matrix)) # SHOW THE SPECIFICATION OF THE BEST FITTING MODEL
 
-spec <- ugarchspec( mean.model=list( armaOrder=c(2,0) ), variance.model = list( model="eGARCH" ), distribution = "std" )
+spec <- ugarchspec( mean.model=list( armaOrder=c(3,3) ), variance.model = list( model="eGARCH" ), distribution = "jsu" )
+setfixed(spec) <- list(ma1 = 0)
 fit <- ugarchfit( spec, r )
 show(fit)
 plot(fit,which="all") # diagnostics
