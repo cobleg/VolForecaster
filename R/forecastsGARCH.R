@@ -39,12 +39,36 @@ plot(d.realisedVol, type = 'l', lwd = 1)
 library(rugarch)
 
 # find the best fitting ARFIMA model for returns
-ARFIMA.fit = autoarfima(data = r, ar.max = 4, ma.max = 4, criterion = "AIC", method = "full")
+ARFIMA.fit = autoarfima(data = r, ar.max = 2, ma.max = 2, criterion = "AIC", method = "full")
 show(head(ARFIMA.fit$rank.matrix)) # SHOW THE SPECIFICATION OF THE BEST FITTING MODEL
+headings <- colnames(ARFIMA.fit$rank.matrix)
 
-spec <- ugarchspec( mean.model=list( armaOrder=c(3,3) ), variance.model = list( model="eGARCH" ), distribution = "jsu" )
-setfixed(spec) <- list(ma1 = 0)
+# get the specification of the best fitting model
+arLength <- length(headings[grepl("^ar", headings)]) - 1
+maLength <- length(headings[grepl("^ma", headings)])
+firstRow <- ARFIMA.fit$rank.matrix[1, ]
+arPart <- firstRow[ 1:arLength ]
+maPart <- firstRow[ arLength + 1:maLength ]
+
+myList <- headings[ 1:(arLength + maLength) ]
+myRow <- firstRow[ 1:(arLength + maLength) ]
+
+# create vector that sets ar and ma coefficients to zero to match identified best fitting model identified in autoarfima
+for(i in 1:length(myRow)){
+  if(myRow[i] == 0){
+    myList[i] <- paste0(myList[i], " = 0")
+  } else {
+    myList[i] <- ""
+  }
+}
+
+myList <- myList[myList != ""] # remove elements containing no character
+myList <- noquote(myList) # remove quotes from the character vector
+
+spec <- ugarchspec( mean.model=list( armaOrder=c(arLength,maLength) ), variance.model = list( model="eGARCH" ), distribution = "jsu" )
+setfixed(spec) <- list(myList)
 fit <- ugarchfit( spec, r )
+
 show(fit)
 plot(fit,which="all") # diagnostics
 
