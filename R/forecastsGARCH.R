@@ -48,7 +48,7 @@ arLength <- length(headings[grepl("^ar", headings)]) - 1
 maLength <- length(headings[grepl("^ma", headings)])
 firstRow <- ARFIMA.fit$rank.matrix[1, ]
 
-myList <- headings[ 1:(arLength + maLength) ]
+#myList <- headings[ 1:(arLength + maLength) ]
 myRow <- firstRow[ 1:(arLength + maLength) ]
 
 # if the sum of the AR indicators is zero, then remove the AR part of the vector
@@ -97,6 +97,10 @@ plot( tail( index(dat), 20), tail( dat$RealisedVol, 20) , type = 'l', xlab = 'Da
 lines( tail( index(dat), 20), tail( dat$AnnualisedVolatility, 20 ), col='blue' )
 
 
+dateSeries <- seq(as.Date(colnames(bootp@forc@forecast$seriesFor) ), length.out = 20, by = 1)
+forecast <- xts( bootp@forc@forecast$seriesFor * 100, order.by = dateSeries)
+plot(forecast, xlab = 'Date' )
+
 # rolling forecast
 library(parallel)
 
@@ -107,26 +111,4 @@ roll = ugarchroll( spec, r, n.start = 1000, refit.every = 1000, refit.window = "
 show()
 stopCluster(cl)
 plot( roll )
-
-
-###############################################################
-
-#######
-# create vector that sets ar and ma coefficients to zero to match identified best fitting model identified in autoarfima
-for(i in 1:length(myRow2)){
-  if(myRow2[i] == 0){
-    myList[i] <- paste(myList[i], " = 0")
-  } else {
-    myList[i] <- ""
-  }
-}
-
-
-# check if myRow2 has both AR and MA components
-grepl('^ar', names(myRow2)) && grepl('^ma', names(myRow2)) 
-
-myList2 <- myList[myList != ""] # remove elements containing no character
-myList2 <- noquote(myList2) # remove quotes from the character vector
-myList2 <- paste(myList2, collapse = ",")
-myList2 <- noquote(myList2) # remove quotes from the character vector
 
