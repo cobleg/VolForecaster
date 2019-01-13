@@ -82,7 +82,7 @@ shinyServer(function(input, output) {
   spec <- reactive({
     ugarchspec(
       mean.model = list(armaOrder = c(arNumber(), maNumber())),
-      variance.model = list(model = "eGARCH"),
+      variance.model = list(model = input$varianceModelType),
       distribution = "jsu"
     )
   })
@@ -149,8 +149,8 @@ shinyServer(function(input, output) {
   
   output$forecastPlot <- renderPlot({
     dateSeries <- seq(as.Date(colnames(bootp()@forc@forecast$seriesFor) ), length.out = input$forecastLength, by = 1)
-    forecast <- xts( bootp()@forc@forecast$seriesFor, order.by = dateSeries)
-    plot(forecast, xlab = 'Date' )
+    forecast <- xts( bootp()@forc@forecast$seriesFor * 100, order.by = dateSeries)
+    plot(forecast, xlab = 'Date' , ylab = '%', main = paste0('Point forecast of ', input$ticker))
     
   })
 })

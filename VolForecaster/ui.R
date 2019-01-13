@@ -47,14 +47,36 @@ shinyUI(fluidPage(
         )
       ),
       hr(),
-      sliderInput("forecastLength",
-                  "Select forecast length:",
-                  5,
-                  min = 2, 
-                  max = 20,
-                  step = 1)
+      
+      
+      selectInput(
+        "varianceModelType",
+        "Select type of variance model:",
+        c(
+          'eGARCH' = 'eGARCH',
+          'apGARCH' = 'apGARCH',
+          'csGARCH' = 'csGARCH',
+          'fGARCH' = 'fGARCH',
+          
+          'gjrGARCH' = 'gjrGARCH',
+          'iGARCH' = 'iGARCH',
+          'mcsGARCH' = 'mcsGARCH',
+          'realGARCH' = 'realGARCH',
+          'sGARCH' = 'sGARCH'
+        ),
+        selected = 'eGARCH'
+      ),
+      hr(),
+      
+      sliderInput(
+        "forecastLength",
+        "Select forecast length:",
+        5,
+        min = 2,
+        max = 20,
+        step = 1
+      )
     ),
-    
     
     # Show a plot of the generated distribution
     mainPanel(tabsetPanel(
