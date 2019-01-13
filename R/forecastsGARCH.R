@@ -6,7 +6,7 @@ source("getData.R")
 # Get S&P 500 data
 SPX <- getData("SPX")
 
-# calculate realised volatility
+# calculate returns
 r <- diff( log( SPX ), 1)
 
 # inspect data via charts
@@ -47,26 +47,38 @@ headings <- colnames(ARFIMA.fit$rank.matrix)
 arLength <- length(headings[grepl("^ar", headings)]) - 1
 maLength <- length(headings[grepl("^ma", headings)])
 firstRow <- ARFIMA.fit$rank.matrix[1, ]
-arPart <- firstRow[ 1:arLength ]
-maPart <- firstRow[ arLength + 1:maLength ]
 
 myList <- headings[ 1:(arLength + maLength) ]
 myRow <- firstRow[ 1:(arLength + maLength) ]
 
-# create vector that sets ar and ma coefficients to zero to match identified best fitting model identified in autoarfima
-for(i in 1:length(myRow)){
-  if(myRow[i] == 0){
-    myList[i] <- paste0(myList[i], " = 0")
-  } else {
-    myList[i] <- ""
-  }
-}
+# if the sum of the AR indicators is zero, then remove the AR part of the vector
+myRow2 <- myRow
+if(sum(myRow[1:arLength])==0){
+  myRow2 <- myRow[-c(1:arLength)]
+} 
 
-myList <- myList[myList != ""] # remove elements containing no character
-myList <- noquote(myList) # remove quotes from the character vector
+# if the sum of the MA indicators is zero, then remove the MA part of the vector
+if(sum(myRow2[grepl('^ma', names(myRow2))])==0){
+  myRow2 <- myRow2[-which(c(grepl('^ma', names(myRow2))))]
+} 
+
+## now construct a list object consisting of fixed AR and/or MA components
+myList <- as.list(unname(myRow2)) 
+names(myList) <- names(myRow2)
+# remove elements not equal to 0
+myList <- myList[myList == 0]
+
+# check length of AR and MA components
+arLength <- sum(grepl('^ar', names(myRow2)))
+maLength <- sum(grepl('^ma', names(myRow2)))
 
 spec <- ugarchspec( mean.model=list( armaOrder=c(arLength,maLength) ), variance.model = list( model="eGARCH" ), distribution = "jsu" )
-setfixed(spec) <- list(myList)
+
+# if myList is not empty then define fixed compoents in the GARCH model specification
+if(length(myList) != 0){
+  setfixed(spec) <- myList
+}
+
 fit <- ugarchfit( spec, r )
 
 show(fit)
@@ -95,3 +107,26 @@ roll = ugarchroll( spec, r, n.start = 1000, refit.every = 1000, refit.window = "
 show()
 stopCluster(cl)
 plot( roll )
+
+
+###############################################################
+
+#######
+# create vector that sets ar and ma coefficients to zero to match identified best fitting model identified in autoarfima
+for(i in 1:length(myRow2)){
+  if(myRow2[i] == 0){
+    myList[i] <- paste(myList[i], " = 0")
+  } else {
+    myList[i] <- ""
+  }
+}
+
+
+# check if myRow2 has both AR and MA components
+grepl('^ar', names(myRow2)) && grepl('^ma', names(myRow2)) 
+
+myList2 <- myList[myList != ""] # remove elements containing no character
+myList2 <- noquote(myList2) # remove quotes from the character vector
+myList2 <- paste(myList2, collapse = ",")
+myList2 <- noquote(myList2) # remove quotes from the character vector
+
